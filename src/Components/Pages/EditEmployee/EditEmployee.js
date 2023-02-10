@@ -143,7 +143,7 @@ const EditEmployee = () => {
 
   const navigate = useNavigate();
   const handleCreate = () => {
-    navigate('/');
+    navigate('/EmployeeList');
   };
 
   return (
@@ -248,7 +248,9 @@ const EditEmployee = () => {
           <input type="file" id="photo" onChange={handlePhotoChange} />
           {preview && <img src={preview} alt="Preview" className="preview-photo" />}
         </div>
-        <button type="submit" onClick={handleCreate}>Save</button>
+        <button type="submit" 
+        onClick={handleCreate}
+        >Save</button>
       </form>
       </main>
     </>
