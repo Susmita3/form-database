@@ -2,6 +2,9 @@ import React from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./AddEmployee.css";
+import { Db } from "../Firebase_CRUD/firebase_crud";
+import { v4 as uuidv4 } from "uuid";
+import { ref, set } from "firebase/database"
 
 const countries = [
   {
@@ -107,192 +110,229 @@ const skills = [
 ];
 
 const AddEmployee = () => {
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [mobileNo, setMobileNo] = useState("");
-  const [dob, setDob] = useState("");
-  const [country, setCountry] = useState("");
-  const [state, setState] = useState("");
-  const [selectedSkills, setSelectedSkills] = useState([]);
-  const [photo, setPhoto] = useState(null);
-  const [preview, setPreview] = useState(null);
+  const [employeeData, setEmployees] = useState({
+		id: uuidv4(),
+		firstName: "",
+		lastName: "",
+		email: "",
+		mobileNo: "",
+		dob: "",
+		country: "",
+		state: "",
+		selectedSkills: [],
+		photo: null,
+		preview: null,
+	});
 
   function handleCountryChange(event) {
-    setCountry(event.target.value);
-  }
+		setEmployees((prev) => {
+			return { ...prev, country: event.target.value };
+		});
+	}
 
   function handleSkillChange(event) {
-    const skill = event.target.value;
-    if (selectedSkills.includes(skill)) {
-      setSelectedSkills(selectedSkills.filter((s) => s !== skill));
-    } else {
-      setSelectedSkills([...selectedSkills, skill]);
-    }
-  }
+		const skill = event.target.value;
+		if (employeeData.selectedSkills.includes(skill)) {
+			setEmployees((prev) => {
+				return {
+					...prev,
+					selectedSkills: prev.selectedSkills.filter((s) => {
+						return s !== null;
+					}),
+				};
+			});
+		} else {
+			setEmployees((prev) => {
+				return {
+					...prev,
+					selectedSkills: [...prev.selectedSkills, skill],
+				};
+			});
+		}
+	}
 
   function handlePhotoChange(event) {
-    setPhoto(event.target.files[0]);
+		// setPhoto(event.target.files[0]);
+		setEmployees((prev) => {
+			return {
+				...prev,
+				photo: event.target.files[0],
+			};
+		});
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setPreview(e.target.result);
-    };
-    reader.readAsDataURL(event.target.files[0]);
-  }
+		const reader = new FileReader();
+		reader.onload = (e) => {
+			// setPreview(e.target.result);
+			setEmployees((prev) => {
+				return {
+					...prev,
+					preview: e.target.result,
+				};
+			});
+		};
+		reader.readAsDataURL(event.target.files[0]);
+	}
 
-  const navigate = useNavigate();
-  const handleClick = () => {
-    navigate("/EmployeeList");
-  };
+	const navigate = useNavigate();
 
-  // Firebase Connection
-  const submitData = async (e) => {
-    e.preventDefault();
-    const res = await fetch(
-      "https://employeeform-90b97-default-rtdb.asia-southeast1.firebasedatabase.app/employee.json",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          firstName,
-          lastName,
-          email,
-          mobileNo,
-          dob,
-          country,
-          state,
-          selectedSkills,
-          photo,
-          preview,
-        }),
-      }
-    );
-    if (res) {
-      handleClick();
-    }
-  };
+	const handleClick = () => {
+		navigate("/EmployeeList");
+		console.log("Account Edit");
+	};
 
-  return (
-    <>
-      <main className="form-container bg-gradient-to-r from-violet-500 to-fuchsia-500 w-full h-screen">
-        <h1 className="text-blue font-bold text-4xl text-center p-10">
-          Create Employee Date
-        </h1>
+	const submitData = async (e) => {
+		e.preventDefault();
+		// fireDb.child("employee").push(employeeData);
+		set(ref(Db, "employees/" + employeeData.id), employeeData);
 
-        <form
-          className="bg-gradient-to-r from-sky-500 to-indigo-500"
-          onSubmit={submitData}
-        >
+		handleClick();
+	};
+
+return (
+  <>
+    <main className="form-container bg-gradient-to-r from-violet-500 to-fuchsia-500 w-full h-screen">
+      <h1 className="text-blue font-bold text-4xl text-center p-10">
+        Create Employee Date
+      </h1>
+
+      <form
+        className="bg-gradient-to-r from-sky-500 to-indigo-500"
+        onSubmit={submitData}>
+        <div>
+          <label htmlFor="firstName">First Name:</label>
+          <input
+            type="text"
+            id="firstName"
+            value={employeeData.firstName}
+            onChange={(e) =>
+              setEmployees((prev) => {
+                return { ...prev, firstName: e.target.value };
+              })
+            }
+          />
+        </div>
+        <div>
+          <label htmlFor="lastName">Last Name:</label>
+          <input
+            type="text"
+            id="lastName"
+            value={employeeData.lastName}
+            onChange={(e) =>
+              setEmployees((prev) => {
+                return { ...prev, lastName: e.target.value };
+              })
+            }
+          />
+        </div>
+        <div>
+          <label htmlFor="email">Email Address:</label>
+          <input
+            type="email"
+            id="email"
+            value={employeeData.email}
+            onChange={(e) =>
+              setEmployees((prev) => {
+                return { ...prev, email: e.target.value };
+              })
+            }
+          />
+        </div>
+        <div>
+          <label htmlFor="mobileNo">Mobile No:</label>
+          <input
+            type="tel"
+            id="mobileNo"
+            value={employeeData.mobileNo}
+            onChange={(e) =>
+              setEmployees((prev) => {
+                return { ...prev, mobileNo: e.target.value };
+              })
+            }
+          />
+        </div>
+        <div>
+          <label htmlFor="dob">Date of Birth:</label>
+          <input
+            type="date"
+            id="dob"
+            value={employeeData.dob}
+            onChange={(e) =>
+              setEmployees((prev) => {
+                return { ...prev, dob: e.target.value };
+              })
+            }
+          />
+        </div>
+        <div>
+          <label htmlFor="country">Country:</label>
+          <select
+            id="country"
+            value={employeeData.country}
+            onChange={handleCountryChange}>
+            <option value="">--Select a country--</option>
+            {countries.map((c) => (
+              <option key={c.name} value={c.name}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {employeeData.country && (
           <div>
-            <label htmlFor="firstName">First Name:</label>
-            <input
-              type="text"
-              id="firstName"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-            />
-          </div>
-          <div>
-            <label htmlFor="lastName">Last Name:</label>
-            <input
-              type="text"
-              id="lastName"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-            />
-          </div>
-          <div>
-            <label htmlFor="email">Email Address:</label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-          <div>
-            <label htmlFor="mobileNo">Mobile No:</label>
-            <input
-              type="tel"
-              id="mobileNo"
-              value={mobileNo}
-              onChange={(e) => setMobileNo(e.target.value)}
-            />
-          </div>
-          <div>
-            <label htmlFor="dob">Date of Birth:</label>
-            <input
-              type="date"
-              id="dob"
-              value={dob}
-              onChange={(e) => setDob(e.target.value)}
-            />
-          </div>
-          <div>
-            <label htmlFor="country">Country:</label>
-            <select id="country" value={country} onChange={handleCountryChange}>
-              <option value="">--Select a country--</option>
-              {countries.map((c) => (
-                <option key={c.name} value={c.name}>
-                  {c.name}
-                </option>
-              ))}
+            <label htmlFor="state">State:</label>
+            <select
+              id="state"
+              value={employeeData.state}
+              onChange={(e) =>
+                setEmployees((prev) => {
+                  return { ...prev, state: e.target.value };
+                })
+              }>
+              <option value="">--Select a state--</option>
+              {countries
+                .find((c) => c.name === employeeData.country)
+                .states.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
             </select>
           </div>
-
-          {country && (
-            <div>
-              <label htmlFor="state">State:</label>
-              <select
-                id="state"
-                value={state}
-                onChange={(e) => setState(e.target.value)}
-              >
-                <option value="">--Select a state--</option>
-                {countries
-                  .find((c) => c.name === country)
-                  .states.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-              </select>
+        )}
+        <div>
+          <label htmlFor="skills">Professional Skills:</label>
+          {skills.map((skill) => (
+            <div key={skill}>
+              <input
+                type="checkbox"
+                id={skill}
+                value={skill}
+                checked={employeeData.selectedSkills.includes(skill)}
+                onChange={handleSkillChange}
+              />
+              <label htmlFor={skill}>{skill}</label>
             </div>
+          ))}
+        </div>
+        <div>
+          <label htmlFor="photo">Photo:</label>
+          <input type="file" id="photo" onChange={handlePhotoChange} />
+          {employeeData.preview && (
+            <img
+              src={employeeData.preview}
+              alt="Preview"
+              className="preview-photo"
+            />
           )}
-          <div>
-            <label htmlFor="skills">Professional Skills:</label>
-            {skills.map((skill) => (
-              <div key={skill}>
-                <input
-                  type="checkbox"
-                  id={skill}
-                  value={skill}
-                  checked={selectedSkills.includes(skill)}
-                  onChange={handleSkillChange}
-                />
-                <label htmlFor={skill}>{skill}</label>
-              </div>
-            ))}
-          </div>
-          <div>
-            <label htmlFor="photo">Photo:</label>
-            <input type="file" id="photo" onChange={handlePhotoChange} />
-            {preview && (
-              <img src={preview} alt="Preview" className="preview-photo" />
-            )}
-          </div>
-          <button type="submit"
-          //  onClick={handleClick}
-           >
-            Submit
-          </button>
-        </form>
-      </main>
-    </>
-  );
+        </div>
+        <button type="submit">
+          Submit
+        </button>
+      </form>
+    </main>
+  </>
+);
 };
 
 export default AddEmployee;
